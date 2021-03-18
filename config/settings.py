@@ -176,6 +176,13 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+if DEBUG:
+    INSTALLED_APPS.append('debug_toolbar')
+    MIDDLEWARE.append('debug_toolbar.middleware.DebugToolbarMiddleware')
+    DEBUG_TOOLBAR_CONFIG = {
+        'SHOW_TOOLBAR_CALLBACK': lambda request: True,
+    }
+
 if env('USE_LOCALE_MIDDLEWARE', True, must_be_explicitly_false):
     MIDDLEWARE.insert(4, 'django.middleware.locale.LocaleMiddleware')
 
