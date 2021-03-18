@@ -1,0 +1,52 @@
+---
+services:
+  django:
+    build:
+      context: ./
+      dockerfile: ./devops/docker/django/Dockerfile
+    profiles: ['dev']
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - '8000:8000'
+    depends_on:
+      - db
+    environment:
+      DEV_HOST: ${DEV_HOST}
+      DJANGO_DEBUG: ${DJANGO_DEBUG}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
+      SECRET_KEY: ${SECRET_KEY}
+      AUTH_PASSWORD_VALIDATORS: ${AUTH_PASSWORD_VALIDATORS}
+      SECURE_SSL_REDIRECT: ${SECURE_SSL_REDIRECT}
+      CSRF_COOKIE_SECURE: ${CSRF_COOKIE_SECURE}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE}
+      EMAIL_USE_TLS: ${EMAIL_USE_TLS}
+      SECURE_HSTS_SECONDS: ${SECURE_HSTS_SECONDS}
+      DB_ENGINE: ${DB_ENGINE}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: db
+      DB_PORT: ${DB_PORT}
+
+  db:
+    image: ${DB_IMAGE:-postgres}:${DB_IMAGE_VERSION:-latest}
+    profiles: ['db', 'dev']
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - mysql_data:/var/lib/mysql
+    environment:
+      POSTGRES_DB: ${DB_NAME:-mydb}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      MYSQL_DATABASE: ${DB_NAME:-mydb}
+      MYSQL_USER: ${DB_USER:-mysql}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-mysql}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-mysql}
+    ports:
+      - '${DB_PORT:-5432}:${DB_PORT:-5432}'
+
+volumes:
+  postgres_data:
+  mysql_data:

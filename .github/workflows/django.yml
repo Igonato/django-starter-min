@@ -5,7 +5,7 @@ name: Django CI
   push:
   pull_request:
   schedule:
-    - cron: "0 0 * * 1"
+    - cron: '0 0 * * 1'
 
 jobs:
   test:
@@ -21,12 +21,55 @@ jobs:
           - '3.7'
           - '3.8'
           - '3.9'
+        db:
+          - name: SQLite
+            engine: django.db.backends.sqlite3
+        include:
+          - os: ubuntu-latest
+            python-version: '3.9'
+            db:
+              name: PostgreSQL
+              image: postgres
+              version: latest
+              engine: django.db.backends.postgresql
+              port: '5432'
+          - os: ubuntu-latest
+            python-version: '3.9'
+            db:
+              name: MySQL
+              image: mysql
+              version: '5.7'
+              engine: django.db.backends.mysql
+              port: '3306'
+          - os: ubuntu-latest
+            python-version: '3.9'
+            db:
+              name: MariaDB
+              image: mariadb
+              version: latest
+              engine: django.db.backends.mysql
+              port: '3306'
     env:
       PY_COLORS: '1'
       SECRET_KEY: cn2^51(@(iqco@@(%sbbe2_l=mg(z1+1#x(k_f5=!@#vowli4xd
       ALLOWED_HOSTS: example.com
+      DB_IMAGE: ${{ matrix.db.image }}
+      DB_IMAGE_VERSION: ${{ matrix.db.version }}
+      DB_ENGINE: ${{ matrix.db.engine }}
+      DB_PORT: ${{ matrix.db.port }}
+      DB_NAME: default
+      DB_USER: myuser
+      DB_PASSWORD: mypassword
+      DB_HOST: '127.0.0.1'
 
     steps:
+      - name: Check out the code
+        uses: actions/checkout@v2
+
+      - name: Start database container
+        run: docker-compose --profile db up -d
+        if: ${{ matrix.db.name != 'SQLite' }}
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v1
         with:
@@ -35,14 +78,14 @@ jobs:
       - name: Install Pipenv
         run: pip install pipenv
 
-      - name: Check out the code
-        uses: actions/checkout@v2
-
       - name: Install project dependencies
         run: pipenv install
 
       - name: Run lint
         run: pipenv run flake8 --exclude migrations
+
+      - name: Check if migrations can run
+        run: pipenv run python manage.py migrate
 
       - name: Run tests
         run: pipenv run pytest
