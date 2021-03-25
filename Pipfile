@@ -5,5 +5,10 @@ name = "pypi"
 
 [packages]
 django = "*"
+flake8 = "*"
+pytest = "*"
+pytest-cov = "*"
+pytest-django = "*"
+pytest-env = "*"
 
 [dev-packages]
